@@ -1,8 +1,17 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'second.dart';
 import 'modele/warrior.dart';
+import 'modele/enemy.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+          appId: '1:457715692972:android:214bd8a20cf03a92753609',
+          apiKey: 'AIzaSyCJqgGTVanOWWPZJ3DK7-gfZCb5HIj3-YM',
+          messagingSenderId: 'my_messagingSenderId',
+          projectId: 'projetflutter-8ef69'));
   runApp(const MyApp());
 }
 
@@ -50,21 +59,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  Warrior _warrior = Warrior();
+  Enemy _enemy = Enemy(10, 10, 0, 'images/ghost.png');
   double _percentage = 1;
-  Warrior _warrior = new Warrior();
   double _heatlh = 100;
 
   void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
       double hit = _warrior.getHit();
-      print(hit);
-      _heatlh = _heatlh - hit;
+      _enemy.beHit(hit);
     });
     _percentageHealth();
   }
@@ -85,8 +88,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _percentageHealth() {
     setState(() {
-      _percentage = _heatlh / 100;
+      _percentage = _enemy.getPercentageHealth();
     });
+    if (_enemy.isDead()) {
+      setState(() {
+        _percentage = 1;
+        _enemy = Enemy(10, 10, 0, 'images/slime.png');
+      });
+    }
   }
 
   @override
@@ -124,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
               color: Colors.red,
             ),
             IconButton(
-              icon: Image.asset('images/kirby.png'),
+              icon: Image.asset(_enemy.imgLink),
               onPressed: _incrementCounter,
               iconSize: 200,
             ),
