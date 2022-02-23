@@ -1,28 +1,30 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'second.dart';
 import 'modele/warrior.dart';
 import 'modele/enemy.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-      options: const FirebaseOptions(
-          appId: '1:457715692972:android:214bd8a20cf03a92753609',
-          apiKey: 'AIzaSyCJqgGTVanOWWPZJ3DK7-gfZCb5HIj3-YM',
-          messagingSenderId: 'my_messagingSenderId',
-          projectId: 'projetflutter-8ef69'));
-  runApp(const MyApp());
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
+  final Future<FirebaseApp> _fbApp = Firebase.initializeApp();
+
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Fighting game',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -35,7 +37,22 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: FutureBuilder(
+        future: _fbApp,
+        builder:(context,snapshot){
+          if(snapshot.hasError) {
+            print('You have an error! ${snapshot.error.toString()}');
+            return Text('Error');
+          }else if (snapshot.hasData){
+            return MyHomePage(title: 'Here to fight montser !');
+          }else{
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        }
+      )
+      //const
     );
   }
 }
@@ -60,9 +77,54 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Warrior _warrior = Warrior();
-  Enemy _enemy = Enemy(10, 10, 0, 'images/ghost.png');
+  final _database = FirebaseDatabase.instance.ref();
+
+  Enemy _enemy = Enemy('ghost',10, 10, 0, 'assets/images/ghost.png');
   double _percentage = 1;
-  double _heatlh = 100;
+  late File jsonFile;
+  bool fileExist=false;
+  late Directory dir;
+  final String fileName='warrior.json';
+  String fileContent="reading file";
+
+  @override
+  void initState(){
+    super.initState();
+    getApplicationDocumentsDirectory().then((Directory directory){
+      dir=directory;
+      jsonFile=new File(dir.path + '/' + fileName);
+      fileExist= jsonFile.existsSync();
+      if(fileExist){
+       setState(() {
+         Map<String, dynamic> userMap = jsonDecode(jsonFile.readAsStringSync());
+         //print(fileContent);
+         _warrior=Warrior.fromJson(userMap);
+       });
+      }
+    });
+  }
+
+  File createFile(Map<String,dynamic> content){
+    print('Creating file');
+    File file = File(dir.path+ '/' +fileName);
+    file.createSync();
+    fileExist=true;
+    file.writeAsStringSync(json.encode(content));
+    return file;
+  }
+
+  void writeToFile(){
+    if(fileExist){
+      print('Writing in file');
+      jsonFile.writeAsStringSync(json.encode(_warrior));
+      print(json.decode(jsonFile.readAsStringSync()));
+    }else{
+      createFile(_warrior.toJson());
+    }
+  }
+
+
+
 
   void _incrementCounter() {
     setState(() {
@@ -88,12 +150,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _percentageHealth() {
     setState(() {
-      _percentage = _enemy.getPercentageHealth();
+      print(_enemy.getPercentageHealth());
+      print(_warrior.getLevel());
+      _percentage = _enemy.getPercentageHealth()/100;
     });
     if (_enemy.isDead()) {
       setState(() {
         _percentage = 1;
-        _enemy = Enemy(10, 10, 0, 'images/slime.png');
+        _warrior.increaseLevel();
+        double level=_warrior.getLevel().toDouble();
+        _enemy = Enemy('slime' ,10+level, 10+level, 0, 'assets/images/slime.png');
+        writeToFile();
       });
     }
   }
@@ -124,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'You re fighting a : ',
+              'You\'re fighting a : '+_enemy.getName(),
               style: Theme.of(context).textTheme.headline4,
             ),
             LinearProgressIndicator(
