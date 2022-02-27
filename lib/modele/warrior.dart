@@ -1,65 +1,102 @@
 import 'dart:math';
 
 class Warrior {
-  int damage = 1;
-  int critChance = 5;
-  int level=1;
-  double critMultiplier = 1.2;
+  int _damage = 5;
+  int _critChance = 5;
+  int _level=1;
+  double _critMultiplier = 1.2;
+  int _coins=0;
 
   Warrior();
 
+
+
   Warrior.fromJson(Map<String, dynamic> json)
-      : damage = json['damage'],
-        critChance = json['critChance'],
-        level=json['level'],
-        critMultiplier=json['critMultiplier'];
+      : _damage = json['_damage'],
+        _critChance = json['_critChance'],
+        _level=json['_level'],
+        _critMultiplier=json['_critMultiplier'],
+        _coins=json['_coins'];
 
   Map<String, dynamic> toJson() => {
-    'damage': damage,
-    'critChance': critChance,
-    'level': level,
-    'critMultiplier': critMultiplier,
+    '_damage': _damage,
+    '_critChance': _critChance,
+    '_level': _level,
+    '_critMultiplier': _critMultiplier,
+    '_coins':_coins,
   };
 
+  int get coins => _coins;
+
+  set coins(int value) {
+    _coins = value;
+  }
+
+  increaseCoins(){
+    _coins+=1+(_level/50).floor();
+  }
+
   increaseDamage() {
-    damage += 1;
+    if(_coins>0) {
+      _damage += 1;
+      _coins-=1;
+    }
   }
 
   increaseCritChance() {
-    critChance += 1;
+    if(_coins>0) {
+      _critChance += 1;
+      _coins-=1;
+    }
   }
 
-  increasecritMultiplier() {
-    critMultiplier = ((critMultiplier + 0.1) * 10).roundToDouble() / 10;
+  increaseCritMultiplier() {
+    if(_coins>0) {
+      _critMultiplier = ((_critMultiplier + 0.1) * 10).roundToDouble() / 10;
+      _coins-=1;
+    }
   }
 
   increaseLevel() {
-    level+=1;
+    _level+=1;
   }
 
   int getDamage() {
-    return damage;
+    return _damage;
   }
 
   int getCritChance() {
-    return critChance;
+    return _critChance;
   }
 
   double getCritMultiplier() {
-    return critMultiplier;
+    return _critMultiplier;
   }
 
   int getLevel() {
-    return level;
+    return _level;
   }
 
   double getHit() {
     var rng = Random();
-    double crit = rng.nextInt(1000).toDouble();
-
-    double hit = damage.toDouble();
-    if (crit < critChance * 10) hit += damage;
-
+    double leftCrit=_critChance%100;
+    double nbCrit=(_critChance/100).floorToDouble();
+    double crit = rng.nextInt(100).toDouble();
+    double hit = _damage.toDouble();
+    if(nbCrit!=0) {
+      hit=hit*pow(_critMultiplier, nbCrit+1).toDouble();
+    }
+    if(crit<leftCrit) {
+      hit*=_critMultiplier;
+    }
+/*
+    print('Original dmg : '+_damage.toString());
+    print('leftCrit : '+leftCrit.toString() );
+    print('critchance : '+_critChance.toString());
+    print('crit to attain : '  +crit.toString());
+    print('nbCrit : '+nbCrit.toString());
+*/
     return hit;
   }
+  
 }

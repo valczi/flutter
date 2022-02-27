@@ -16,20 +16,23 @@ class _MySecondScreenState extends State<MySecondScreen> {
   Warrior _warrior = Warrior();
 
   // Fonction appelée automatiquement à la création de l'état
-  // On initialise le compteur avec la donnée reçue par le widget
+  // On initialise le warrior avec la donnée reçue par le widget
   @override
   initState() {
     _warrior = widget.warrior;
     super.initState();
   }
 
-  // Retour à l'écran principal avec renvoi du compteur
+  // Retour à l'écran principal avec renvoi
   void onClicRetour() {
     Navigator.pop(context, _warrior);
   }
 
   void reset() {
-    _warrior = Warrior();
+    setState(() {
+      _warrior = Warrior();
+    });
+
   }
 
   void _increaseDamage() {
@@ -46,7 +49,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
 
   void _increaseCritMultiplier() {
     setState(() {
-      _warrior.increasecritMultiplier();
+      _warrior.increaseCritMultiplier();
     });
   }
 
@@ -70,70 +73,78 @@ class _MySecondScreenState extends State<MySecondScreen> {
           Navigator.pop(context, _warrior);
           return false;
         },
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Expanded(
-                flex: 5,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 100, left: 20, right: 20),
-                  child: Wrap(
-                      direction: Axis.vertical,
-                      spacing: 30,
-                      children: <Widget>[
-                        Text(
-                          'Degat : ' + _warrior.getDamage().toString(),
-                        ),
-                        IconButton(
-                          onPressed: _increaseDamage,
-                          icon: const Icon(
-                            Icons.add,
-                            color: Colors.grey,
-                            size: 30,
-                            semanticLabel: 'increase damage',
-                          ),
-                        ),
-                        Text(
-                          'Chance de critique : ' +
-                              _warrior.getCritChance().toString(),
-                        ),
-                        IconButton(
-                          onPressed: _increaseCritChance,
-                          icon: const Icon(
-                            Icons.add,
-                            color: Colors.grey,
-                            size: 30,
-                            semanticLabel: 'increase critical chance',
-                          ),
-                        ),
-                        Text(
-                          'Multiplicateur critique : ' +
-                              _warrior.getCritMultiplier().toString(),
-                        ),
-                        IconButton(
-                          onPressed: _increaseCritMultiplier,
-                          icon: const Icon(
-                            Icons.add,
-                            color: Colors.grey,
-                            size: 30,
-                            semanticLabel: 'increase critical multiplier ',
-                          ),
-                        ),
-                      ]),
+        child: SingleChildScrollView(
+          child: Center(
+    child:Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Text(
+                'Coins available : ' +
+                    _warrior.coins.toString(),
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Open Sans',
+                    fontSize: 40),
+              ),
+              Text(
+                'Damage : ' + _warrior.getDamage().toString(),
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Open Sans',
+                    fontSize: 20),
+              ),
+              IconButton(
+                onPressed: _increaseDamage,
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.grey,
+                  size: 30,
+                  semanticLabel: 'increase critical multiplier ',
                 ),
               ),
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  alignment: Alignment.bottomCenter,
-                  child: ElevatedButton(
-                    onPressed: onClicRetour,
-                    child: const Text('Retour'),
-                  ),
+              Text(
+                'Critical multiplier : ' +
+                    _warrior.getCritMultiplier().toString(),
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Open Sans',
+                    fontSize: 20),
+              ),
+              IconButton(
+                onPressed: _increaseCritMultiplier,
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.grey,
+                  size: 30,
+                  semanticLabel: 'increase critical multiplier ',
+                ),
+              ),
+              Text(
+                'Critical chance : ' + _warrior.getCritChance().toString(),
+                style: TextStyle(
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.bold,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Open Sans',
+                    fontSize: 20),
+              ),
+              IconButton(
+                onPressed: _increaseCritChance,
+                icon: const Icon(
+                  Icons.add,
+                  color: Colors.grey,
+                  size: 30,
+                  semanticLabel: 'increase critical multiplier ',
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),
