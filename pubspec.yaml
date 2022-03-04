@@ -65,10 +65,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
 
   assets :
-    - assets/images/ghost.png
-    - assets/images/kirby.png
-    - assets/images/slime.png
-    - assets/images/skeleton.png
+    - assets/images/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

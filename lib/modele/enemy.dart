@@ -46,14 +46,15 @@ class Enemy {
     health*=((level+9+(level/50).floorToDouble())/10);
     health=double.parse(( health ).toStringAsFixed(0));
     maxHealth=health;
-    defence*=level/5;
+    print('POIDS : ' + defence.toString());
+    defence*=level/25;
     defence=double.parse(( defence ).toStringAsFixed(0));
   }
 
   Enemy.fromJson(Map<String, dynamic> json)
       : health = json['stats'][0]['base_stat'].toDouble(),
         maxHealth= json['stats'][0]['base_stat'].toDouble(),
-        defence = double.parse(( (json['stats'][0]['base_stat'].toDouble()/30)).toStringAsFixed(1)),
+        defence = double.parse(( (json['weight'].toDouble()/100)).toStringAsFixed(1)),
         imgLink=json['sprites']['front_default'],
         name=json['name'];
 

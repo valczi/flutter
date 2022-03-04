@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'second.dart';
 import 'modele/warrior.dart';
+import 'modele/equipement.dart';
 import 'modele/enemy.dart';
 import 'api/pokemonChoser.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,22 +20,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Fighting game',
-        theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with "flutter run". You'll see the
-          // application has a blue toolbar. Then, without quitting the app, try
-          // changing the primarySwatch below to Colors.green and then invoke
-          // "hot reload" (press "r" in the console where you ran "flutter run",
-          // or simply save your changes to "hot reload" in a Flutter IDE).
-          // Notice that the counter didn't reset back to zero; the application
-          // is not restarted.
-          primarySwatch: Colors.blue,
+      title: 'Fighting game',
+      theme: ThemeData(
+        // This is the theme of your application.
+        //
+        // Try running your application with "flutter run". You'll see the
+        // application has a blue toolbar. Then, without quitting the app, try
+        // changing the primarySwatch below to Colors.green and then invoke
+        // "hot reload" (press "r" in the console where you ran "flutter run",
+        // or simply save your changes to "hot reload" in a Flutter IDE).
+        // Notice that the counter didn't reset back to zero; the application
+        // is not restarted.
+        textTheme: const TextTheme(
+          headline1: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
+          headline4: TextStyle(fontSize: 36.0),
+          bodyText2: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
         ),
-        home: MyHomePage(title: 'Here to fight montser !'),
-        //const
-        );
+        primarySwatch: Colors.green,
+      ),
+      home: const MyHomePage(title: 'Here to fight montser !'),
+      debugShowCheckedModeBanner: false,
+      //const
+    );
   }
 }
 
@@ -59,15 +65,32 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Warrior _warrior = Warrior();
-  Enemy _enemy=Enemy('Base entity', 10, 10, 0, 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png');
+  Enemy _enemy = Enemy('Base entity', 10, 10, 0,
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png');
   double _percentage = 1;
+
+   List<Equipement> _equipements = [
+    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
+    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
+    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
+    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
+    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
+    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
+    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
+    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
+    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
+    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
+    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
+    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
+  ];
+
   late File jsonFile;
   bool fileExist = false;
   late Directory dir;
   final String fileName = 'warrior.json';
   String fileContent = "reading file";
   double _iconeSize = 200;
-  PokemonChoser _Poke=PokemonChoser();
+  final PokemonChoser _Poke = PokemonChoser();
 
   @override
   void initState() {
@@ -101,27 +124,32 @@ class _MyHomePageState extends State<MyHomePage> {
     if (fileExist) {
       //print('Writing in file');
       jsonFile.writeAsStringSync(json.encode(_warrior));
-     // print(json.decode(jsonFile.readAsStringSync()));
+      // print(json.decode(jsonFile.readAsStringSync()));
     } else {
       createFile(_warrior.toJson());
     }
   }
 
-  void setNewPokemon() async{
-    Enemy poke = await _Poke.getPokemon();
-    poke.getToLevel(_warrior.getLevel().toDouble());
-    setState(() {
-      _enemy = poke;
-
-    });
+  void setNewPokemon() async {
+    try {
+      Enemy poke = await _Poke.getPokemon();
+      poke.getToLevel(_warrior.getLevel().toDouble());
+      setState(() {
+        _enemy = poke;
+        _percentage = 1;
+      });
+    } catch (e) {
+      print('Exception Fetch');
+      setNewPokemon();
+    }
   }
 
   void _getHit() {
     setState(() {
       double hit = _warrior.getHit();
-      print('damage : '+hit.toString());
+      //print('damage : '+hit.toString());
       _enemy.beHit(hit);
-      _iconeSize=_iconeSize*0.8;
+      _iconeSize = _iconeSize * 0.8;
     });
     Future.delayed(const Duration(milliseconds: 150), () {
       setState(() {
@@ -137,10 +165,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Appel du second écran et attente du résultat
   void _appelEcranSuivant() async {
-    Warrior result = await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => MySecondScreen(_warrior)));
+    List result = await Navigator.push(context,
+        MaterialPageRoute(builder: (context) => MySecondScreen(_warrior,_equipements)));
     setState(() {
-      _warrior = result;
+      _warrior = result[0];
+      _equipements = result[1];
     });
   }
 
@@ -187,52 +216,68 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You\'re fighting : ' + _enemy.getName(),
-              style: Theme.of(context).textTheme.headline4,
+            FittedBox(
+              child: Text(
+                'You\'re fighting : ' + _enemy.getName(),
+                style: Theme.of(context).textTheme.headline4,
+              ),
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.center,
             ),
-            Wrap(
-              spacing: 25,
-              children: [
-                Text(
-                  'Max Life : '+ _enemy.getMaxHealth().toString(),
-                  style: const TextStyle(
-                    color: Colors.blueGrey,
-                    decorationStyle: TextDecorationStyle.solid,
-                    fontSize: 25,
+            Container(
+              child: Wrap(
+                spacing: 25,
+                children: [
+                  Text(
+                    'Max Life : ' + _enemy.getMaxHealth().toString(),
+                    style: const TextStyle(
+                      color: Colors.blueGrey,
+                      decorationStyle: TextDecorationStyle.solid,
+                      fontSize: 25,
+                    ),
                   ),
-                ),
-                Text(
-                  'Defence :'+ _enemy.getDefence().toString(),
-                  style:const TextStyle(
-                    color: Colors.blueGrey,
-                    decorationStyle: TextDecorationStyle.solid,
-                    fontSize: 25,
+                  Text(
+                    'Defence :' + _enemy.getDefence().toString(),
+                    style: const TextStyle(
+                      color: Colors.blueGrey,
+                      decorationStyle: TextDecorationStyle.solid,
+                      fontSize: 25,
+                    ),
                   ),
-                ),
-                Text(
-                  'Life left '+ _enemy.getHealth().toString(),
-                  style: const TextStyle(
-                    color: Colors.blueGrey,
-                    decorationStyle: TextDecorationStyle.solid,
-                    fontSize: 25,
+                  Text(
+                    'Life left ' + _enemy.getHealth().toString(),
+                    style: const TextStyle(
+                      color: Colors.blueGrey,
+                      decorationStyle: TextDecorationStyle.solid,
+                      fontSize: 25,
+                    ),
                   ),
-                ),
-                Text(
-                  'level : '+_warrior.getLevel().toString(),
-                  style: const TextStyle(
-                    color: Colors.blueGrey,
-                    decorationStyle: TextDecorationStyle.solid,
-                    fontSize: 25,
+                  Text(
+                    'level : ' + _warrior.getLevel().toString(),
+                    style: const TextStyle(
+                      color: Colors.blueGrey,
+                      decorationStyle: TextDecorationStyle.solid,
+                      fontSize: 25,
+                    ),
                   ),
+                ],
+              ),
+              margin: const EdgeInsets.all(10.0),
+              padding: const EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.lightBlue,
                 ),
-              ],
+              ),
             ),
-            //Bar de vie des enemies
-            LinearProgressIndicator(
-              value: _percentage,
-              backgroundColor: Colors.black,
-              color: Colors.red,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              //Bar de vie des enemies
+              child: LinearProgressIndicator(
+                value: _percentage,
+                backgroundColor: Colors.black,
+                color: Colors.red,
+              ),
             ),
             //Box pour l'animation des enemies
             SizedBox(
@@ -241,7 +286,10 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Center(
                 child: IconButton(
                   icon: Image.network(
-                      _enemy.imgLink,
+                    _enemy.imgLink,
+                    loadingBuilder: (context,child,progress){
+                      return progress == null ? child : const CircularProgressIndicator();
+                    },
                     fit: BoxFit.fill,
                     width: 200,
                     height: 200,
@@ -250,14 +298,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   iconSize: _iconeSize,
                   splashColor: Colors.redAccent,
                   splashRadius: 100,
-
                 ),
               ),
             ),
             ElevatedButton(
               onPressed: _onClicEnvoi,
               child: const Text('Profile'),
-            )
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 35, vertical: 20),
+                  textStyle: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ),
