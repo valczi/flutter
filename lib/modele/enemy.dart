@@ -46,7 +46,6 @@ class Enemy {
     health*=((level+9+(level/50).floorToDouble())/10);
     health=double.parse(( health ).toStringAsFixed(0));
     maxHealth=health;
-    print('POIDS : ' + defence.toString());
     defence*=level/25;
     defence=double.parse(( defence ).toStringAsFixed(0));
   }

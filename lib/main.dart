@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         ),
         primarySwatch: Colors.green,
       ),
-      home: const MyHomePage(title: 'Here to fight montser !'),
+      home: const MyHomePage(title: 'Here to fight monster !'),
       debugShowCheckedModeBanner: false,
       //const
     );
@@ -69,51 +69,70 @@ class _MyHomePageState extends State<MyHomePage> {
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png');
   double _percentage = 1;
 
-   List<Equipement> _equipements = [
-    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
-    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
-    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
-    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
-    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
-    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
-    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
-    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
-    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
-    Equipement(10, 0, 20, 20,'assets/images/slime.png'),
-    Equipement(5, 10, 20, 30,'assets/images/ghost.png'),
-    Equipement(20, 0, 20, 20,'assets/images/kirby.png'),
+  List<Equipement> _equipements = [
+    Equipement(10, 0, 5, 5, 'assets/images/WoodenSword.png', 'Wooden sword'),
+    Equipement(20, 5, 25, 20, 'assets/images/IronSword.png', 'Iron Sword '),
+    Equipement(10, 20, 50, 40, 'assets/images/Bow.png', 'Bow'),
+    Equipement(40, 20, 75, 50, 'assets/images/GoldenSword.png', 'Gold sword'),
+    Equipement(50, 50, 100, 100, 'assets/images/DiamondSword.png', 'Diamond kirby'),
+    Equipement(90, 40, 150, 150, 'assets/images/NetheriteSword.png', 'Netherite Sword'),
+    Equipement(80, 80, 200, 200, 'assets/images/EnderSword.png', 'Ender Sword'),
   ];
 
   late File jsonFile;
+  late File jsonFileEquip;
   bool fileExist = false;
+  bool fileExistEquip = false;
   late Directory dir;
   final String fileName = 'warrior.json';
+  final String fileNameEquip = 'equip.json';
   String fileContent = "reading file";
   double _iconeSize = 200;
-  final PokemonChoser _Poke = PokemonChoser();
+
+  final PokemonChoser _poke = PokemonChoser();
 
   @override
   void initState() {
     super.initState();
     getApplicationDocumentsDirectory().then((Directory directory) {
       dir = directory;
-      jsonFile = new File(dir.path + '/' + fileName);
+      jsonFile = File(dir.path + '/' + fileName);
+      jsonFileEquip = File(dir.path + '/' + fileNameEquip);
+
       fileExist = jsonFile.existsSync();
+      fileExistEquip = jsonFileEquip.existsSync();
+
       if (fileExist) {
         setState(() {
           Map<String, dynamic> userMap =
               jsonDecode(jsonFile.readAsStringSync());
-          //print(fileContent);
+          userMap.removeWhere((key, value) => value == null);
           _warrior = Warrior.fromJson(userMap);
           setNewPokemon();
         });
       }
+
+      if (fileExistEquip) {
+
+        setState(() {
+          Map<String, dynamic> userMap =
+              jsonDecode(jsonFileEquip.readAsStringSync());
+          _equipements = [];
+          userMap.forEach((key, value) {
+            _equipements.add(Equipement.fromJson(value));
+          });
+        });
+      } else {
+        //print(json.encode(_equipements));
+        var map1 = {for (var e in _equipements) e.name: e.toJson()};
+        createFile(map1, dir.path + '/' + fileNameEquip);
+      }
     });
   }
 
-  File createFile(Map<String, dynamic> content) {
+  File createFile(Map<String, dynamic> content, String path) {
     //print('Creating file');
-    File file = File(dir.path + '/' + fileName);
+    File file = File(path);
     file.createSync();
     fileExist = true;
     file.writeAsStringSync(json.encode(content));
@@ -126,13 +145,24 @@ class _MyHomePageState extends State<MyHomePage> {
       jsonFile.writeAsStringSync(json.encode(_warrior));
       // print(json.decode(jsonFile.readAsStringSync()));
     } else {
-      createFile(_warrior.toJson());
+      createFile(_warrior.toJson(), dir.path + '/' + fileName);
+    }
+  }
+
+  void writeToFileEquip() {
+    var map1 = {for (var e in _equipements) e.name: e.toJson()};
+    if (fileExistEquip) {
+      //print('Writing in file');
+      jsonFileEquip.writeAsStringSync(json.encode(map1));
+      // print(json.decode(jsonFile.readAsStringSync()));
+    } else {
+      createFile(map1, dir.path + '/' + fileNameEquip);
     }
   }
 
   void setNewPokemon() async {
     try {
-      Enemy poke = await _Poke.getPokemon();
+      Enemy poke = await _poke.getPokemon();
       poke.getToLevel(_warrior.getLevel().toDouble());
       setState(() {
         _enemy = poke;
@@ -165,12 +195,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // Appel du second écran et attente du résultat
   void _appelEcranSuivant() async {
-    List result = await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => MySecondScreen(_warrior,_equipements)));
+    List result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MySecondScreen(_warrior, _equipements)));
     setState(() {
       _warrior = result[0];
       _equipements = result[1];
     });
+    writeToFileEquip();
+    writeToFile();
   }
 
   void _percentageHealth() {
@@ -287,8 +321,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: IconButton(
                   icon: Image.network(
                     _enemy.imgLink,
-                    loadingBuilder: (context,child,progress){
-                      return progress == null ? child : const CircularProgressIndicator();
+                    loadingBuilder: (context, child, progress) {
+                      return progress == null
+                          ? child
+                          : const CircularProgressIndicator();
                     },
                     fit: BoxFit.fill,
                     width: 200,

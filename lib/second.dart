@@ -29,12 +29,15 @@ class _MySecondScreenState extends State<MySecondScreen> {
 
   // Retour à l'écran principal avec renvoi
   void onClicRetour() {
-    Navigator.pop(context, [_warrior,_equipements]);
+    Navigator.pop(context, [_warrior, _equipements]);
   }
 
   void reset() {
     setState(() {
-      _warrior = Warrior(); Navigator.pop(context, [_warrior,_equipements]);
+      _warrior = Warrior();
+      for (var element in _equipements) {
+        element.unlocked = false;
+      }
     });
   }
 
@@ -50,12 +53,9 @@ class _MySecondScreenState extends State<MySecondScreen> {
     });
   }
 
-  void _BuyEquip(Equipement equipement) {
+  void _buyEquip(Equipement equipement) {
     setState(() {
-      equipement.unlocked = true;
-      _warrior.equipement = equipement;
-
-      //_equipements=_equipements;
+      _warrior.buyEquipement(equipement);
     });
   }
 
@@ -67,7 +67,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
 
   Widget _buildPopupDialog(BuildContext context, Equipement element) {
     return AlertDialog(
-      title: const Text('Weapon info :'),
+      title: Text(element.name + ' :'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +75,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: Text(
-              'minimal Level : ' + element.level.toString(),
+              'Minimal Level : ' + element.level.toString(),
               style: TextStyle(
                 color: Colors.grey[800],
                 fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: Text(
-              'Damage : ' + element.damage.toString(),
+              'Additionnal damage : ' + element.damage.toString(),
               style: TextStyle(
                 color: Colors.grey[800],
                 fontWeight: FontWeight.bold,
@@ -124,19 +124,23 @@ class _MySecondScreenState extends State<MySecondScreen> {
     );
   }
 
-  List<Widget> _Equipment() {
+  List<Widget> _equipment() {
     List<Widget> list = [];
     for (var element in _equipements) {
       MaterialColor color = Colors.grey;
       String buy = 'Buy';
+      String price= 'Price : '+element.price.toString();
       if (element.unlocked) {
         color = Colors.green;
         buy = 'Equip';
+        price= 'Unlocked';
       }
-      if (_warrior.getEquipement() == element) {
-        color = Colors.lightBlue;
+      if (_warrior.getEquipement() != null) {
+        if (_warrior.getEquipement()!.name == element.name) {
+          price= 'Equiped';
+          color = Colors.lightBlue;
+        }
       }
-
       list.add(
         Container(
           width: 150,
@@ -152,7 +156,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('Prix : ' + element.price.toString()),
+              Text(price),
               Container(
                 padding: const EdgeInsets.only(top: 15),
                 child: Image.asset(
@@ -168,7 +172,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      _BuyEquip(element);
+                      _buyEquip(element);
                     },
                     child: Text(buy),
                     style: ElevatedButton.styleFrom(
@@ -180,7 +184,6 @@ class _MySecondScreenState extends State<MySecondScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      _BuyEquip(element);
                       showDialog(
                         context: context,
                         builder: (BuildContext context) =>
@@ -223,7 +226,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
           // Gestion du bouton back de l'appBar ET du téléphone
           WillPopScope(
         onWillPop: () async {
-          Navigator.pop(context,[_warrior,_equipements]);
+          Navigator.pop(context, [_warrior, _equipements]);
           return false;
         },
         child: SingleChildScrollView(
@@ -262,7 +265,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
                               padding: const EdgeInsets.only(
                                   left: 0, top: 12, right: 0, bottom: 0),
                               child: Text(
-                                'Damage : ' + _warrior.getDamageString(),
+                                '( Price 1 ) Damage : ' + _warrior.getDamageString(),
                                 style: TextStyle(
                                   color: Colors.grey[800],
                                   fontWeight: FontWeight.bold,
@@ -291,8 +294,8 @@ class _MySecondScreenState extends State<MySecondScreen> {
                               padding: const EdgeInsets.only(
                                   left: 0, top: 12, right: 0, bottom: 0),
                               child: Text(
-                                'Critical multiplier : ' +
-                                    _warrior.getCritMultiplierString(),
+                                '( Price 2 ) Critical chance : ' +
+                                    _warrior.getCritChanceString(),
                                 style: TextStyle(
                                     color: Colors.grey[800],
                                     fontWeight: FontWeight.bold,
@@ -302,7 +305,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
                               ),
                             ),
                             IconButton(
-                              onPressed: _increaseCritMultiplier,
+                              onPressed: _increaseCritChance,
                               constraints: const BoxConstraints(),
                               icon: const Icon(
                                 Icons.add,
@@ -319,8 +322,8 @@ class _MySecondScreenState extends State<MySecondScreen> {
                               padding: const EdgeInsets.only(
                                   left: 0, top: 12, right: 0, bottom: 0),
                               child: Text(
-                                'Critical chance : ' +
-                                    _warrior.getCritChanceString(),
+                                '( Price 3 ) Critical multiplier : ' +
+                                    _warrior.getCritMultiplierString(),
                                 style: TextStyle(
                                     color: Colors.grey[800],
                                     fontWeight: FontWeight.bold,
@@ -330,7 +333,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
                               ),
                             ),
                             IconButton(
-                              onPressed: _increaseCritChance,
+                              onPressed: _increaseCritMultiplier,
                               constraints: const BoxConstraints(),
                               icon: const Icon(
                                 Icons.add,
@@ -356,7 +359,8 @@ class _MySecondScreenState extends State<MySecondScreen> {
                 ),
                 Flexible(
                   child: Wrap(
-                    children: _Equipment(),
+                    alignment: WrapAlignment.center,
+                    children: _equipment(),
                   ),
                 ),
               ],

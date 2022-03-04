@@ -11,13 +11,22 @@ class Warrior {
 
   Warrior();
 
+  Warrior.name(this._damage, this._critChance, this._level,
+      this._critMultiplier, this._coins, this._equipement);
+
+  @override
+  String toString() {
+    return 'Warrior{_damage: $_damage, _critChance: $_critChance, _level: $_level, _critMultiplier: $_critMultiplier, _coins: $_coins, _equipement: $_equipement}';
+  }
+
   Warrior.fromJson(Map<String, dynamic> json)
       : _damage = json['_damage'],
         _critChance = json['_critChance'],
         _level = json['_level'],
         _critMultiplier = json['_critMultiplier'],
         _coins = json['_coins'],
-        _equipement = json['_equipement'];
+        _equipement = (json['_equipement']!=null) ? Equipement.fromJson(json['_equipement']): null;
+
 
   Map<String, dynamic> toJson() => {
         '_damage': _damage,
@@ -25,7 +34,7 @@ class Warrior {
         '_level': _level,
         '_critMultiplier': _critMultiplier,
         '_coins': _coins,
-        '_equipement': _equipement,
+        '_equipement':(_equipement != null ) ? _equipement!.toJson() : null,
       };
 
   Equipement? getEquipement() {
@@ -43,12 +52,12 @@ class Warrior {
   }
 
   increaseCoins() {
-    _coins += 1 + (_level / 50).floor();
+    _coins += 2 + (_level / 50).floor();
   }
 
   buyEquipement(Equipement e) {
     if (!e.unlocked) {
-      if (e.price <= _coins) {
+      if (e.price <= _coins && e.level <= _level) {
         _coins -= e.price;
         e.unlocked=true;
         equipement=e;
@@ -68,16 +77,16 @@ class Warrior {
 
 
   increaseCritChance() {
-    if (_coins > 0) {
+    if (_coins > 1) {
       _critChance += 1;
-      _coins -= 1;
+      _coins -= 2;
     }
   }
 
   increaseCritMultiplier() {
-    if (_coins > 0) {
+    if (_coins > 2) {
       _critMultiplier = ((_critMultiplier + 0.1) * 10).roundToDouble() / 10;
-      _coins -= 1;
+      _coins -= 3;
     }
   }
 

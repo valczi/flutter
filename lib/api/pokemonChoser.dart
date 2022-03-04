@@ -8,7 +8,7 @@ class PokemonChoser{
 
   Future<Enemy> getPokemon() async{
     var rng = Random();
-    var response= await http.get(Uri.parse('https://pokeapi.co/api/v2/pokemon/'+rng.nextInt(300).toString()));
+    var response= await http.get(Uri.parse('https://pokeapi.co/api/v2/pokemon/'+rng.nextInt(600).toString()));
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
