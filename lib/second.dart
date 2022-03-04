@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'modele/warrior.dart';
 import 'modele/equipement.dart';
+import 'package:confirm_dialog/confirm_dialog.dart';
 
 class MySecondScreen extends StatefulWidget {
   MySecondScreen(this.warrior, this.equipements, {Key? key}) : super(key: key);
@@ -32,7 +33,7 @@ class _MySecondScreenState extends State<MySecondScreen> {
     Navigator.pop(context, [_warrior, _equipements]);
   }
 
-  void reset() {
+  Future<void> reset() async{
     setState(() {
       _warrior = Warrior();
       for (var element in _equipements) {
@@ -129,16 +130,21 @@ class _MySecondScreenState extends State<MySecondScreen> {
     for (var element in _equipements) {
       MaterialColor color = Colors.grey;
       String buy = 'Buy';
-      String price= 'Price : '+element.price.toString();
+      String price = 'Price : ' + element.price.toString();
+      if (element.level <= _warrior.getLevel()) {
+        color = Colors.lightBlue;
+      } else {
+        price = 'Blocked';
+      }
       if (element.unlocked) {
         color = Colors.green;
         buy = 'Equip';
-        price= 'Unlocked';
+        price = 'Unlocked';
       }
       if (_warrior.getEquipement() != null) {
         if (_warrior.getEquipement()!.name == element.name) {
-          price= 'Equiped';
-          color = Colors.lightBlue;
+          price = 'Equiped';
+          color = Colors.orange;
         }
       }
       list.add(
@@ -149,9 +155,9 @@ class _MySecondScreenState extends State<MySecondScreen> {
           margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
               border: Border.all(
-            color: color,
-            width: 2,
-          )),
+                color: color,
+                width: 2,
+              )),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -216,15 +222,25 @@ class _MySecondScreenState extends State<MySecondScreen> {
         Padding(
           padding: const EdgeInsets.only(right: 40),
           child: IconButton(
-            icon: const Icon(Icons.autorenew),
-            tooltip: 'Reinialisation',
-            onPressed: reset,
+              icon: const Icon(Icons.autorenew),
+              tooltip: 'Reinialisation',
+              onPressed: () async {
+                if (await confirm(
+                  context,
+                  title: const Text('Confirm'),
+                  content: const Text('Would you like to reset everything ?'),
+                  textCancel: const Text('No'),
+                  textOK: const Text('Yes'),
+                )) {
+                  return reset();
+                }
+              },
           ),
         ),
       ]),
       body:
-          // Gestion du bouton back de l'appBar ET du téléphone
-          WillPopScope(
+      // Gestion du bouton back de l'appBar ET du téléphone
+      WillPopScope(
         onWillPop: () async {
           Navigator.pop(context, [_warrior, _equipements]);
           return false;
@@ -265,7 +281,8 @@ class _MySecondScreenState extends State<MySecondScreen> {
                               padding: const EdgeInsets.only(
                                   left: 0, top: 12, right: 0, bottom: 0),
                               child: Text(
-                                '( Price 1 ) Damage : ' + _warrior.getDamageString(),
+                                '( Price 1 ) Damage : ' +
+                                    _warrior.getDamageString(),
                                 style: TextStyle(
                                   color: Colors.grey[800],
                                   fontWeight: FontWeight.bold,
